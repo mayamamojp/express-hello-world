@@ -45,7 +45,7 @@ initializeDb = () => {
   return db;
 }
 
-insert = async (recipe) => {
+insertRow = async (recipe) => {
   const db = initializeDb();
 
   db.serialize(() => {
@@ -76,7 +76,46 @@ insert = async (recipe) => {
   });
 }
 
-get = async (id) => {
+deleteRow = async (id) => {
+  const db = initializeDb();
+
+  return new Promise((resolve, reject) =>{  
+    db.run(
+      `DELETE FROM recipes WHERE id = ${id}`, 
+      err => {
+        db.close();
+        if (err) return reject(err);
+        return resolve();
+      }
+    );
+  });
+}
+
+updateRow = async (recipe) => {
+  const db = initializeDb();
+
+  return new Promise((resolve, reject) =>{  
+    db.run(`
+    UPDATE recipes SET
+      title = '${recipe.title}', 
+      making_time = '${recipe.making_time}', 
+      serves = '${recipe.serves}', 
+      ingredients = '${recipe.ingredients}', 
+      cost = '${recipe.cost}', 
+      created_at = '${(new Date()).toLocaleString().replaceAll("/", "-")}', 
+      updated_at = '${(new Date()).toLocaleString().replaceAll("/", "-")}' 
+    WHERE id = ${recipe.id}
+    `,
+    err => {
+      db.close();
+      if (err) return reject(err);
+      return resolve();
+    }
+    );
+  });
+}
+
+getRow = async (id) => {
   const db = initializeDb();
 
   return new Promise((resolve, reject) =>{  
@@ -91,7 +130,7 @@ get = async (id) => {
   });
 }
 
-getAll = async () => {
+getAllRows = async () => {
   const db = initializeDb();
 
   return new Promise((resolve, reject) =>{  
@@ -120,10 +159,8 @@ const essentials = ["title", "making_time", "serves", "ingredients", "cost"];
 app.post("/recipes", async (req, res) => {
   const existsEssentials = _.difference(essentials, Object.keys(req.body)).length == 0;
   if (existsEssentials) {
-    const id = await insert(req.body);
-    // console.log("inserted:", id);
-    const recipe = await get(id);
-    // console.log("inserted recipe:", recipe);
+    const id = await insertRow(req.body);
+    const recipe = await getRow(id);
     res.type("json").send(
       {
         "message": "Recipe successfully created!",
@@ -141,13 +178,37 @@ app.post("/recipes", async (req, res) => {
 });
 
 app.get("/recipes", async (req, res) => {
-  const recipes = await getAll();
+  const recipes = await getAllRows();
   res.type('json').send(recipes);
 });
 
-app.get("/recipe/:id", (req, res) => res.type('json').send([dummy, dummy]));
-app.patch("/recipe/:id", (req, res) => res.type('json').send([dummy, dummy]));
-app.delete("/recipe/:id", (req, res) => res.type('json').send([dummy, dummy]));
+app.get("/recipes/:id", async (req, res) => {
+  const recipe = await getRow(req.params.id);
+  res.type('json').send(recipe);
+});
+
+app.patch("/recipes/:id", async (req, res) => {
+  let recipe = req.body;
+  recipe.id = req.params.id;
+  await updateRow(recipe);
+  res.type("json").send(
+    {
+      "message": "Recipe successfully updated!",
+      "recipe": [recipe]
+    }      
+  );
+});
+
+app.delete("/recipes/:id", async (req, res) => {
+  const recipe = await getRow(req.params.id);
+  if (!recipe) {
+    res.type("json").send({ "message":"No Recipe found" });
+  } else {
+    await deleteRow(req.params.id);
+    res.type("json").send({  "message": "Recipe successfully removed!" });
+  }
+});
+
 
 const server = app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 

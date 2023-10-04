@@ -11,4 +11,20 @@ content-type: application/json
 ###
 GET http://localhost:3001/recipes
 ###
-GET http://localhost:3001/recipesX
+GET http://localhost:3001/recipes/6
+###
+DELETE http://localhost:3001/recipes/7
+###
+DELETE http://localhost:3001/recipes/100
+###
+PATCH http://localhost:3001/recipes/6
+content-type: application/json
+
+{
+    "title": "XXX123トマトスープ",
+    "making_time": "XXX12315分",
+    "serves": "XXX1235人",
+    "ingredients": "XXX123玉ねぎ, トマト, スパイス, 水",
+    "cost": "XXX123450"
+}
+

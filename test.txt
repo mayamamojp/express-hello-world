@@ -1,9 +1,12 @@
 POST http://localhost:3001/recipes
-
 content-type: application/json
+
 {
-    "name": "sample",
-    "time": "Wed, 21 Oct 2015 18:27:50 GMT"
+    "title": "123トマトスープ",
+    "making_time": "12315分",
+    "serves": "1235人",
+    "ingredients": "123玉ねぎ, トマト, スパイス, 水",
+    "cost": "123450"
 }
 ###
 GET http://localhost:3001/recipes
